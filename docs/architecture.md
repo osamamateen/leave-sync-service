@@ -71,23 +71,33 @@ sequenceDiagram
   participant H as HCM
 
   C->>R: POST /requests {employeeId, locationId, days}
+
   rect rgb(238,246,255)
-  note over R,DB: single transaction
-  R->>B: resolveBalance(employeeId, locationId)
-  B->>DB: findUnique (404 if no pool)
-  R->>B: reserveBalance (available ≥ days? else 422)
-  B->>DB: guarded update reserved+=days, version++ ; RESERVE ledger
+    note over R,DB: single transaction
+
+    R->>B: resolveBalance(employeeId, locationId)
+    B->>DB: findUnique (404 if no pool)
+
+    R->>B: reserveBalance (available ≥ days? else 422)
+
+    B->>DB: guarded update reserved+=days, version++<br/>append RESERVE ledger row
   end
+
   R-->>C: 201 RESERVED
 
   C->>R: POST /requests/:id/approve
+
   R->>H: deduct {employeeId, locationId, days, Idempotency-Key}
   H-->>R: 200 {balance}
+
   R->>R: assertSaneHcmBalance(result)
+
   rect rgb(238,246,255)
-  note over R,DB: single transaction
-  R->>B: commitDeduction (total-=days, reserved-=days, version++) ; DEDUCT ledger
+    note over R,DB: single transaction
+
+    R->>B: commitDeduction<br/>total-=days, reserved-=days, version++<br/>append DEDUCT ledger row
   end
+
   R-->>C: 200 APPROVED
 ```
 
