@@ -1,0 +1,18 @@
+{
+  "name": "examplehr-system",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Time-Off Microservice + Mock HCM (monorepo)",
+  "scripts": {
+    "start:timeoff:dev": "npm --prefix apps/timeoff-service run start:dev",
+    "start:hcm:dev": "npm --prefix apps/mock-hcm run start:dev",
+    "build": "npm --prefix apps/timeoff-service run build && npm --prefix apps/mock-hcm run build",
+    "test": "npm --prefix apps/timeoff-service test && npm --prefix apps/mock-hcm test",
+    "test:e2e": "npm --prefix apps/timeoff-service run test:e2e && npm --prefix apps/mock-hcm run test:e2e",
+    "export:openapi": "npm --prefix apps/timeoff-service run export:openapi && npm --prefix apps/mock-hcm run export:openapi",
+    "prisma:generate": "npm --prefix apps/timeoff-service exec prisma generate",
+    "prisma:migrate": "npm --prefix apps/timeoff-service exec prisma migrate dev",
+    "prisma:studio": "npm --prefix apps/timeoff-service run prisma:studio",
+    "db:seed": "npm --prefix apps/timeoff-service run db:seed"
+  }
+}

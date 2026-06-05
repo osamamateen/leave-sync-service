@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// Balances
+//
+// Local projection of an employee's leave balance, one pooled row per
+// (employeeId, locationId) — balances are NOT split by leave type; requests
+// of any leave type draw from the same pool. `availableBalance` is derived as
+// totalBalance - reservedBalance and is therefore NOT stored.
+// `version` backs optimistic locking for concurrency protection (Phase 5).
+// ---------------------------------------------------------------------------
+model Balance {
+  id              String   @id @default(cuid())
+  employeeId      String
+  locationId      String
+  totalBalance    Float    @default(0)
+  reservedBalance Float    @default(0)
+  version         Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([employeeId, locationId])
+  @@index([employeeId])
+  @@map("balances")
+}
+
+// ---------------------------------------------------------------------------
+// Requests
+//
+// A time-off request and its lifecycle status. `locationId` targets the pooled
+// balance the request draws from — balances are per (employeeId, locationId), so
+// a request must name the location. `idempotencyKey` makes request creation
+// duplicate-safe (Phase 7).
+// status: PENDING | RESERVED | APPROVED | REJECTED | FAILED_SYNC
+// ---------------------------------------------------------------------------
+model Request {
+  id             String   @id @default(cuid())
+  employeeId     String
+  locationId     String
+  days           Float
+  status         String   @default("PENDING")
+  idempotencyKey String?  @unique
+  reason         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  ledgerEntries LedgerEntry[]
+
+  @@index([employeeId, locationId])
+  @@index([status])
+  @@map("requests")
+}
+
+// ---------------------------------------------------------------------------
+// Ledger
+//
+// Append-only audit trail of every balance movement. Rows are immutable:
+// there is no updatedAt and nothing should ever UPDATE/DELETE here.
+// entryType: RESERVE | RELEASE | DEDUCT | ADJUST | RECONCILE
+// `amount` is a signed delta; `balanceAfter` snapshots the resulting total.
+// ---------------------------------------------------------------------------
+model LedgerEntry {
+  id           String   @id @default(cuid())
+  employeeId   String
+  entryType    String
+  amount       Float
+  balanceAfter Float?
+  requestId    String?
+  note         String?
+  createdAt    DateTime @default(now())
+
+  request Request? @relation(fields: [requestId], references: [id])
+
+  @@index([employeeId])
+  @@index([requestId])
+  @@map("ledger")
+}
+
+// ---------------------------------------------------------------------------
+// Reconciliation logs
+//
+// One row per drift correction made by the reconciliation job (Phase 6),
+// recording the local value before/after repair against the HCM source.
+// ---------------------------------------------------------------------------
+model ReconciliationLog {
+  id               String   @id @default(cuid())
+  employeeId       String
+  previousBalance  Float
+  correctedBalance Float
+  drift            Float
+  source           String   @default("FULL_SYNC")
+  createdAt        DateTime @default(now())
+
+  @@index([employeeId])
+  @@map("reconciliation_logs")
+}

@@ -1,0 +1,281 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/admin/failure-config": {
+      "get": {
+        "operationId": "FailureConfigController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "FailureConfig"
+        ]
+      },
+      "put": {
+        "operationId": "FailureConfigController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFailureConfigDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "FailureConfig"
+        ]
+      }
+    },
+    "/balances/full-sync": {
+      "get": {
+        "operationId": "BalancesController_fullSync",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Balances"
+        ]
+      }
+    },
+    "/balances/{employeeId}": {
+      "get": {
+        "operationId": "BalancesController_getByEmployee",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Balances"
+        ]
+      }
+    },
+    "/balances/deduct": {
+      "post": {
+        "operationId": "BalancesController_deduct",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeductBalanceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Balances"
+        ]
+      }
+    },
+    "/balances/adjust": {
+      "post": {
+        "operationId": "BalancesController_adjust",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustBalanceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Balances"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Mock HCM",
+    "description": "Simulated external HCM: balances, full-sync, failure simulation",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "UpdateFailureConfigDto": {
+        "type": "object",
+        "properties": {
+          "timeoutRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "errorRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "latencyMs": {
+            "type": "number",
+            "minimum": 0
+          },
+          "timeoutMs": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "DeductBalanceDto": {
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string"
+          },
+          "locationId": {
+            "type": "string"
+          },
+          "days": {
+            "type": "number",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "employeeId",
+          "locationId",
+          "days"
+        ]
+      },
+      "AdjustBalanceDto": {
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string"
+          },
+          "locationId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "employeeId",
+          "locationId",
+          "amount"
+        ]
+      }
+    }
+  }
+}
